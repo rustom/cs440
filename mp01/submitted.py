@@ -20,7 +20,20 @@ def joint_distribution_of_word_counts(texts, word0, word1):
       X0 is the number of times that word1 occurs in a given text,
       X1 is the number of times that word2 occurs in the same text.
     '''
-    raise RuntimeError('You need to write this part!')
+
+    max_word_0 = 0
+    max_word_1 = 0
+    for text in texts:
+        max_word_0 = max(max_word_0, text.count(word0))
+        max_word_1 = max(max_word_1, text.count(word1))
+
+    Pjoint = np.zeros((max_word_0+1, max_word_1+1))
+
+    for text in texts:
+        Pjoint[text.count(word0), text.count(word1)] += 1
+
+    Pjoint /= Pjoint.sum()
+
     return Pjoint
 
 def marginal_distribution_of_word_counts(Pjoint, index):
@@ -36,7 +49,17 @@ def marginal_distribution_of_word_counts(Pjoint, index):
       if index==0, then X is X0
       if index==1, then X is X1
     '''
-    raise RuntimeError('You need to write this part!')
+
+    if index == 0:
+        Pmarginal = np.zeros(Pjoint.shape[0])
+    else:
+        Pmarginal = np.zeros(Pjoint.shape[1])
+
+    if index == 0:
+        Pmarginal = Pjoint.sum(axis=1)
+    else:
+        Pmarginal = Pjoint.sum(axis=0)
+
     return Pmarginal
     
 def conditional_distribution_of_word_counts(Pjoint, Pmarginal):
@@ -50,7 +73,10 @@ def conditional_distribution_of_word_counts(Pjoint, Pmarginal):
     Outputs: 
     Pcond (numpy array) - Pcond[m,n] = P(X1=n|X0=m)
     '''
-    raise RuntimeError('You need to write this part!')
+
+    Pcond = np.zeros(Pjoint.shape)
+    Pcond = Pjoint / Pmarginal[:,np.newaxis]
+
     return Pcond
 
 def mean_from_distribution(P):
@@ -61,7 +87,10 @@ def mean_from_distribution(P):
     Outputs:
     mu (float) - the mean of X
     '''
-    raise RuntimeError('You need to write this part!')
+
+    indices = np.arange(P.shape[0])
+    mu = (indices * P).sum()
+
     return mu
 
 def variance_from_distribution(P):
@@ -72,7 +101,12 @@ def variance_from_distribution(P):
     Outputs:
     var (float) - the variance of X
     '''
-    raise RuntimeError('You need to write this part!')
+
+    indices = np.arange(P.shape[0])
+
+    mu = mean_from_distribution(P)
+    var = ((indices-mu)**2 * P).sum()
+
     return var
 
 def covariance_from_distribution(P):
@@ -83,7 +117,15 @@ def covariance_from_distribution(P):
     Outputs:
     covar (float) - the covariance of X0 and X1
     '''
-    raise RuntimeError('You need to write this part!')
+
+    indices0 = np.arange(P.shape[0])
+    indices1 = np.arange(P.shape[1])
+
+    mu0 = mean_from_distribution(P.sum(axis=1))
+    mu1 = mean_from_distribution(P.sum(axis=0))
+
+    covar = ((indices0-mu0)[:,np.newaxis] * (indices1-mu1)[np.newaxis,:] * P).sum()
+    
     return covar
 
 def expectation_of_a_function(P, f):
@@ -98,6 +140,11 @@ def expectation_of_a_function(P, f):
     Output:
     expected (float) - the expected value, E[f(X0,X1)]
     '''
-    raise RuntimeError('You need to write this part!')
+
+    indices0 = np.arange(P.shape[0])
+    indices1 = np.arange(P.shape[1])
+
+    expected = (f(indices0[:,np.newaxis], indices1[np.newaxis,:]) * P).sum()
+
     return expected
     
