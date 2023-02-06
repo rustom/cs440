@@ -20,8 +20,18 @@ def k_nearest_neighbors(image, train_images, train_labels, k):
     labels - 1-D array of k labels corresponding to the k images
     '''
 
+    num_train = len(train_images)
+    distances = np.zeros(num_train)
 
-    raise RuntimeError('You need to write this part!')
+    for i in range(num_train):
+        distances[i] = np.sum((image - train_images[i]) ** 2)
+
+    indices = np.argsort(distances)
+    neighbors = train_images[indices[:k]]
+    labels = train_labels[indices[:k]]
+
+    return neighbors, labels
+
 
 
 def classify_devset(dev_images, train_images, train_labels, k):
@@ -37,8 +47,24 @@ def classify_devset(dev_images, train_images, train_labels, k):
     scores (list) -number of nearest neighbors that voted for the majority class of each dev image
     '''
     
-    raise RuntimeError('You need to write this part!')
+    num_dev = len(dev_images)
+    hypotheses = np.zeros(num_dev)
+    scores = np.zeros(num_dev)
 
+    for i in range(num_dev):
+        neighbors, labels = k_nearest_neighbors(dev_images[i], train_images, train_labels, k)
+        
+        # if tie occurs, predict negative class
+
+        num_positive = np.sum(labels)
+        if num_positive > k / 2:
+            hypotheses[i] = 1
+            scores[i] = num_positive
+        else:
+            hypotheses[i] = 0
+            scores[i] = k - num_positive
+
+    return hypotheses, scores
 
 def confusion_matrix(hypotheses, references):
     '''
@@ -54,4 +80,11 @@ def confusion_matrix(hypotheses, references):
     f1(float) - the computed f1 score from the matrix
     '''
 
-    raise RuntimeError('You need to write this part!')
+    confusions = np.zeros((2, 2))
+    for i in range(len(hypotheses)):
+        confusions[references[i] * 1][hypotheses[i] * 1] += 1
+
+    accuracy = (confusions[0][0] + confusions[1][1]) / np.sum(confusions)
+    f1 = 2 * confusions[1][1] / (2 * confusions[1][1] + confusions[0][1] + confusions[1][0])
+
+    return confusions, accuracy, f1
