@@ -21,7 +21,14 @@ def create_frequency_table(train):
     frequency (dict of Counters) 
         - frequency[y][x] = number of tokens of word x in texts of class y
     '''
-    raise RuntimeError("You need to write this part!")
+    frequency = {}
+
+    for y in train:
+        frequency[y] = Counter()
+        for text in train[y]:
+            frequency[y].update(text)
+
+    return frequency
 
 def remove_stopwords(frequency):
     '''
@@ -34,7 +41,15 @@ def remove_stopwords(frequency):
         - nonstop[y][x] = frequency of word x in texts of class y,
           but only if x is not a stopword.
     '''
-    raise RuntimeError("You need to write this part!")
+    nonstop = {}
+
+    for y in frequency:
+        nonstop[y] = Counter()
+        for x in frequency[y]:
+            if x not in stopwords:
+                nonstop[y][x] = frequency[y][x]
+
+    return nonstop
 
 def laplace_smoothing(nonstop, smoothness):
     '''
@@ -52,7 +67,15 @@ def laplace_smoothing(nonstop, smoothness):
     Be careful that your vocabulary only counts words that occurred at least once
     in the training data for class y.
     '''
-    raise RuntimeError("You need to write this part!")
+    likelihood = {}
+
+    for y in nonstop:
+        likelihood[y] = {}
+        for x in nonstop[y]:
+            likelihood[y][x] = (nonstop[y][x] + smoothness) / (sum(nonstop[y].values()) + smoothness * (len(nonstop[y]) + 1))
+        likelihood[y]['OOV'] = smoothness / (sum(nonstop[y].values()) + smoothness * (len(nonstop[y]) + 1))
+
+    return likelihood
 
 def naive_bayes(texts, likelihood, prior):
     '''
@@ -68,7 +91,28 @@ def naive_bayes(texts, likelihood, prior):
     hypotheses (list)
         - hypotheses[i] = class label for the i'th text
     '''
-    raise RuntimeError("You need to write this part!")
+    hypotheses = []
+
+    for text in texts:
+        pos = np.log(prior)
+        neg = np.log(1 - prior)
+        for word in text:
+            if word in stopwords: 
+                continue
+            if word in likelihood['pos']:
+                pos += np.log(likelihood['pos'][word])
+            else:
+                pos += np.log(likelihood['pos']['OOV'])
+            if word in likelihood['neg']:
+                neg += np.log(likelihood['neg'][word])
+            else:
+                neg += np.log(likelihood['neg']['OOV'])
+        if pos > neg:
+            hypotheses.append('pos')
+        else:
+            hypotheses.append('neg')
+
+    return hypotheses
 
 def optimize_hyperparameters(texts, labels, nonstop, priors, smoothnesses):
     '''
@@ -89,5 +133,12 @@ def optimize_hyperparameters(texts, labels, nonstop, priors, smoothnesses):
         - accuracies[m,n] = dev set accuracy achieved using the
           m'th candidate prior and the n'th candidate smoothness
     '''
-    raise RuntimeError("You need to write this part!")
-                          
+    accuracies = np.zeros((len(priors), len(smoothnesses)))
+
+    for i in range(len(priors)):
+        for j in range(len(smoothnesses)):
+            likelihood = laplace_smoothing(nonstop, smoothnesses[j])
+            hypotheses = naive_bayes(texts, likelihood, priors[i])
+            accuracies[i][j] = np.mean(np.array(hypotheses) == np.array(labels))
+
+    return accuracies
