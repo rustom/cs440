@@ -28,7 +28,34 @@ def bfs(maze):
     """
     #TODO: Implement bfs function
 
+    # first, find the start and waypoint
+    start = None
+    waypoint = None
+    for x in range(maze.size.y):
+        for y in range(maze.size.x):
+            if maze[x, y] == maze.legend.start:
+                start = (x, y)
+            if maze[x, y] == maze.legend.waypoint:
+                waypoint = (x, y)
+
+    # then, run bfs to find the path from start to waypoint
+    queue = []
+    queue.append([start])
+    visited = set()
+    while queue:
+        path = queue.pop(0)
+        node = path[-1]
+        if node not in visited:
+            visited.add(node)
+            if node == waypoint:
+                return path
+            for neighbor in maze.neighbors(node[0], node[1]):
+                new_path = list(path)
+                new_path.append(neighbor)
+                queue.append(new_path)
+
     return []
+
 
 def astar_single(maze):
     """
@@ -39,6 +66,36 @@ def astar_single(maze):
     @return path: a list of tuples containing the coordinates of each state in the computed path
     """
     #TODO: Implement astar_single
+
+    # first, find the start and waypoint
+    start = None
+    waypoint = None
+    for x in range(maze.size.y):
+        for y in range(maze.size.x):
+            if maze[x, y] == maze.legend.start:
+                start = (x, y)
+            if maze[x, y] == maze.legend.waypoint:
+                waypoint = (x, y)
+
+    def heuristic(x1, y1, x2, y2):
+        return abs(x1 - x2) + abs(y1 - y2)
+
+    # then, run astar to find the path from start to waypoint
+    priority_queue = []
+    priority_queue.append([start])
+    visited = set()
+    while priority_queue:
+        path = priority_queue.pop(0)
+        node = path[-1]
+        if node not in visited:
+            visited.add(node)
+            if node == waypoint:
+                return path
+            for neighbor in maze.neighbors(node[0], node[1]):
+                new_path = list(path)
+                new_path.append(neighbor)
+                priority_queue.append(new_path)
+        priority_queue.sort(key=lambda x: len(x) + heuristic(x[-1][0], x[-1][1], waypoint[0], waypoint[1]))
 
     return []
 
@@ -52,5 +109,3 @@ def astar_multiple(maze):
 
     @return path: a list of tuples containing the coordinates of each state in the computed path
     """
-
-    return []
